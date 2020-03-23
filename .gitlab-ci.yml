@@ -1,0 +1,42 @@
+# vim: set expandtab shiftwidth=2 tabstop=8 textwidth=0 filetype=yaml:
+
+.templates_sha: &template_sha 395535ce90eb48e260c0dff12c35d9237e22c539 # see https://docs.gitlab.com/ee/ci/yaml/#includefile
+
+include:
+  - project: 'freedesktop/ci-templates'
+    ref: *template_sha
+    file: '/templates/fedora.yml'
+
+stages:
+  - prep             # prep work like rebuilding the container images if there is a change
+  - build            # for actually building and testing things in a container
+
+variables:
+  FDO_UPSTREAM_REPO: libevdev/evemu
+  FDO_DISTRIBUTION_VERSION: 32
+  FDO_DISTRIBUTION_TAG: '2020-03-23'
+
+qemu-prep:
+  extends:
+    - .fdo.qemu-build@fedora
+  stage: prep
+  tags:
+    - kvm
+  variables:
+    GIT_STRATEGY: none
+    FDO_DISTRIBUTION_PACKAGES: 'autoconf automake libtool make gcc libevdev-devel python3 g++'
+  allow_failure: true
+
+build:
+  extends:
+    - .fdo.distribution-image@fedora
+  stage: build
+  tags:
+    - kvm
+  script:
+    - /app/start_vm.sh
+    - "scp -P 5555 -r $PWD localhost:"
+    - ssh localhost -p 5555 "cd $CI_PROJECT_NAME ; ./autogen.sh --enable-silent-rules && make && make distcheck" && touch .success || true
+  artifacts:
+    paths:
+      - console.out
