@@ -733,11 +733,6 @@ out:
 	return rc;
 }
 
-static inline unsigned long millis(const struct timeval *tv)
-{
-	return tv->tv_sec * 1000 + tv->tv_usec/1000;
-}
-
 static int write_event_desc(FILE *fp, const struct input_event *ev)
 {
 	int rc;
@@ -750,7 +745,7 @@ static int write_event_desc(FILE *fp, const struct input_event *ev)
 				     libevdev_event_code_get_name(ev->type, ev->code),
 				     ev->value);
 		} else {
-			time = millis(&ev->time);
+			time = ev->input_event_sec * 1000 + ev->input_event_usec/1000;
 			dt = time - last_ms;
 			last_ms = time;
 			rc = fprintf(fp, "# ------------ %s (%d) ---------- %+ldms\n",
