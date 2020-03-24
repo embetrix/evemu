@@ -63,6 +63,14 @@
 
 #define SYSCALL(call) while (((call) == -1) && (errno == EINTR))
 
+#ifndef input_event_sec
+#define input_event_sec time.tv_sec
+#endif
+
+#ifndef input_event_usec
+#define input_event_usec time.tv_usec
+#endif
+
 enum error_level {
 	INFO,
 	WARNING,
