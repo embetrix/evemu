@@ -11,8 +11,12 @@ test_cxx_compile_SOURCES = test-cxx-compile.cpp
 test_cxx_compile_LDADD = $(top_builddir)/src/libevemu.la
 
 test_evemu_create_SOURCES = test-evemu-create.c
-test_evemu_create_LDADD = $(top_builddir)/src/libevemu.la
+test_evemu_create_LDADD = \
+			  $(top_builddir)/src/libevemu.la \
+			  $(LIBEVDEV_LIBS) \
+			  $(NULL)
 test_evemu_create_LDFLAGS = -no-install
+test_evemu_create_CFLAGS = $(LIBEVDEV_CFLAGS)
 endif
 
 CLEANFILES = evemu.tmp.*

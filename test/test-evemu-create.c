@@ -10,6 +10,7 @@
 #include <assert.h>
 #include "evemu.h"
 #include <linux/input.h>
+#include <libevdev/libevdev.h>
 
 #define UNUSED __attribute__((unused))
 
@@ -43,19 +44,6 @@ enum flags {
 	EMPTYLINE	 = (1 << 8),
 	WITHNAME	 = (1 << 9), /* use evemu_new(custom name) */
 	ALLFLAGS	 = (WITHNAME << 1) - 1
-};
-
-static int max[EV_CNT] = {
-	0,	 /* EV_SYN */
-	KEY_MAX, /* EV_KEY */
-	REL_MAX, /* EV_REL */
-	ABS_MAX, /* EV_ABS */
-	MSC_MAX, /* EV_MSC */
-	SW_MAX,  /* EV_SW */
-	LED_MAX, /* EV_LED */
-	SND_MAX, /* EV_SND */
-	REP_MAX, /* EV_REP */
-	FF_MAX   /* EV_FF */
 };
 
 static void println(int fd, int flags, const char *format, ...)
@@ -119,8 +107,8 @@ static void check_evemu_read(int fd, const char *file, enum flags flags)
 	if (flags & BITS) {
 		int i;
 		for (i = 0; i < EV_CNT; i++) {
-			int j;
-			for (j = 0; j <= max[i]; j += 8) {
+			int max = libevdev_event_type_get_max(i);
+			for (int j = 0; j <= max; j += 8) {
 				println(fd, flags, bits, i, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff);
 				if (flags & EMPTYLINE)
 					println(fd, flags, "%s", emptyline);
@@ -177,11 +165,14 @@ static void check_evemu_read(int fd, const char *file, enum flags flags)
 	if (flags & BITS) {
 		int i, j;
 		for (i = 1; i < EV_CNT; i++) {
+			int max = libevdev_event_type_get_max(i);
+
 			if (!evemu_has_bit(dev, i))
 				continue;
 
-			for (j = 0; j <= max[i]; j++)
+			for (j = 0; j <= max; j++) {
 				assert(evemu_has_event(dev, i, j));
+			}
 		}
 	}
 
